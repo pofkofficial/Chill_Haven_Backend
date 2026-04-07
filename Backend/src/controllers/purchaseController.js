@@ -207,6 +207,12 @@ const getSalesSummary = async (req, res) => {
     const eventStats = {};
 
     purchases.forEach((purchase) => {
+      // Skip purchases with null event (deleted events)
+      if (!purchase.event) {
+        console.log(`Skipping purchase ${purchase._id} - event not found (possibly deleted)`);
+        return;
+      }
+
       const count = 1; // Each purchase is 1 ticket
       totalTicketsSold += count;
       totalRevenue += purchase.amountPaid;
@@ -324,31 +330,33 @@ const getAllPurchases = async (req, res) => {
       .populate('event', 'title date earlyBirdEnd')
       .sort({ createdAt: -1 }); // Most recent first
 
-    // Format the response with readable data
-    const formattedPurchases = purchases.map(purchase => ({
-      _id: purchase._id,
-      reference: purchase.paystackReference,
-      event: {
-        id: purchase.event._id,
-        title: purchase.event.title,
-        date: purchase.event.date
-      },
-      ticketType: purchase.ticketType,
-      participants: purchase.participants,
-      amountPaid: purchase.amountPaid,
-      isEarlyBird: purchase.isEarlyBird,
-      status: purchase.status,
-      paymentDate: purchase.paymentDate,
-      createdAt: purchase.createdAt
-    }));
+    // Format the response with readable data, skipping purchases with null event
+    const formattedPurchases = purchases
+      .filter(purchase => purchase.event) // Only include purchases with valid event
+      .map(purchase => ({
+        _id: purchase._id,
+        reference: purchase.paystackReference,
+        event: {
+          id: purchase.event._id,
+          title: purchase.event.title,
+          date: purchase.event.date
+        },
+        ticketType: purchase.ticketType,
+        participants: purchase.participants,
+        amountPaid: purchase.amountPaid,
+        isEarlyBird: purchase.isEarlyBird,
+        status: purchase.status,
+        paymentDate: purchase.paymentDate,
+        createdAt: purchase.createdAt
+      }));
 
     // Get summary statistics
-    const totalPurchases = purchases.length;
+    const totalPurchases = purchases.filter(p => p.event).length;
     const totalRevenue = purchases
-      .filter(p => p.status === 'paid')
+      .filter(p => p.status === 'paid' && p.event)
       .reduce((sum, p) => sum + p.amountPaid, 0);
-    const paidCount = purchases.filter(p => p.status === 'paid').length;
-    const pendingCount = purchases.filter(p => p.status === 'pending').length;
+    const paidCount = purchases.filter(p => p.status === 'paid' && p.event).length;
+    const pendingCount = purchases.filter(p => p.status === 'pending' && p.event).length;
 
     res.json({
       success: true,

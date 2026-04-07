@@ -25,6 +25,7 @@ app.use('/api/purchase/webhook', (req, res, next) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/purchase', require('./routes/purchaseRoutes'));
+app.use('/api/attendance', require('./routes/attendanceRoutes'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

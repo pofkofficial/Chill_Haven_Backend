@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const participantSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  email: { type: String, required: true }
+  email: { type: String, required: true },
+  checkedIn: { type: Boolean, default: false },  // Add this
+  checkedInAt: { type: Date }  // Add this
 });
 
 const TicketPurchaseSchema = new mongoose.Schema({
